@@ -57,9 +57,8 @@ test(createUserFail, async () => {
   expect(headers.statuscode).toEqual(emailExists)
 })
 test(loginSuccess, async () => {
-  const email = 't24@hotmail.com'
-  const password = 'test'
-  const loggedUser = await login(email, password)
+  const user = await createHardcodedUser()
+  const loggedUser = await login(user.email, 'test')
   const { headers, data } = loggedUser
   console.log(data)
   expect(headers.statuscode).toEqual(success)

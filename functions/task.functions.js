@@ -1,4 +1,5 @@
 const { post } = require('./services/axios')
+const { createHardcodedUser } = require('./user.functions')
 
 const createTask = async (userId, name) => {
   const url = 'tasks/create'
@@ -36,4 +37,17 @@ const freeze = async (taskId, editFreeze) => {
   return task
 }
 
-module.exports = { createTask, getTasks, getUserTasks, edit, freeze }
+const createHardCodedTask = async () => {
+  const user = await createHardcodedUser()
+  const task = await createTask(user.id, 'teemo')
+  return task.data[0]
+}
+
+module.exports = {
+  createTask,
+  getTasks,
+  getUserTasks,
+  edit,
+  freeze,
+  createHardCodedTask
+}
