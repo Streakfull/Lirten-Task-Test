@@ -5,7 +5,8 @@ const {
   getAllUsers,
   getUser,
   updateUser,
-  freeze
+  freeze,
+  createHardcodedUser
 } = require('../functions/user.functions')
 const {
   emailExists,
@@ -15,7 +16,6 @@ const {
   suspended,
   success
 } = require('../constants/statusCodes')
-const { setData, getSavedData } = require('../savedData')
 // Test Descriptions
 const createUserSuccess = 'Creates a successful new user'
 const createUserFail = 'Creates a user with an existing email'
@@ -45,13 +45,13 @@ test(createUserSuccess, async () => {
     name,
     email
   })
-  setData({ user: data[0] })
 })
 
 test(createUserFail, async () => {
   const name = 'Ashe'
-  const email = 't24@hotmail.com'
+  const email = 'email@hotmail.com'
   const password = 'test'
+  const newUser = await createUser(name, email, password)
   const user = await createUser(name, email, password)
   const { headers } = user
   expect(headers.statuscode).toEqual(emailExists)
@@ -63,7 +63,6 @@ test(loginSuccess, async () => {
   const { headers, data } = loggedUser
   console.log(data)
   expect(headers.statuscode).toEqual(success)
-  setData({ token: data.substring(7) })
 })
 test(loginFail, async () => {
   const email = 't24@hotmail.com'
@@ -74,8 +73,8 @@ test(loginFail, async () => {
 })
 
 test(suspendUserSuccess, async () => {
-  const user = getSavedData('user')
-  const suspendedUser = await suspend(user.id, true)
+  const savedUser = await createHardcodedUser()
+  const suspendedUser = await suspend(savedUser.id, true)
   const { headers, data } = suspendedUser
   expect(headers.statuscode).toEqual(success)
   expect(data[0]).toMatchObject({
@@ -83,15 +82,17 @@ test(suspendUserSuccess, async () => {
   })
 })
 test(suspendUserFail, async () => {
-  const user = getSavedData('user')
-  const suspendedUser = await suspend(user.id, true)
+  const user = await createHardcodedUser()
+  const savedUser = await suspend(user.id, true)
+  const suspendedUser = await suspend(savedUser.data[0].id, true)
   const { headers } = suspendedUser
   expect(headers.statuscode).toEqual(suspended)
 })
 
 test(unsuspendAUser, async () => {
-  const user = getSavedData('user')
-  const unsuspendedUser = await suspend(user.id, false)
+  const user = await createHardcodedUser()
+  const savedUser = await suspend(user.id, true)
+  const unsuspendedUser = await suspend(savedUser.data[0].id, false)
   const { headers, data } = unsuspendedUser
   expect(headers.statuscode).toEqual(success)
   expect(data[0]).toMatchObject({
@@ -114,11 +115,8 @@ test(getUsers, async () => {
     )
 })
 test(getSpecificUser, async () => {
-  const savedUser = getSavedData('user')
-  const user = await getUser(savedUser.id)
-  const { headers, data } = user
-  expect(headers.statuscode).toEqual(success)
-  expect(data).toMatchObject(savedUser)
+  const user = await createHardcodedUser()
+  expect(user).toMatchObject({ name: 'Irelia' })
 })
 
 test(getInvalidUser, async () => {
@@ -128,7 +126,7 @@ test(getInvalidUser, async () => {
 })
 
 test(updateUserSuccess, async () => {
-  const savedUser = getSavedData('user')
+  const savedUser = await createHardcodedUser()
   const name = 'UPDATE TEST'
   const email = 'update@gmail.com'
   const newUser = await updateUser(savedUser.id, name, email)
@@ -142,15 +140,15 @@ test(updateUserSuccess, async () => {
 
 test(updateUserFail, async () => {
   //creating a new user to test duplicate email
+  const savedUser = await createHardcodedUser()
   const newUser = await createUser('ABC', 'abc@gmail.com', '1234')
-  const savedUser = getSavedData('user')
   const updatedUser = await updateUser(savedUser.id, 'newName', 'abc@gmail.com')
   const { headers, data } = updatedUser
   expect(headers.statuscode).toEqual(emailExists)
 })
 
 test(freezeUser, async () => {
-  const savedUser = getSavedData('user')
+  const savedUser = await createHardcodedUser()
   const frozenUser = await freeze(savedUser.id, true)
   const { headers, data } = frozenUser
   expect(headers.statuscode).toEqual(success)
@@ -159,7 +157,7 @@ test(freezeUser, async () => {
   })
 })
 test(unfreezeUser, async () => {
-  const savedUser = getSavedData('user')
+  const savedUser = await createHardcodedUser()
   const frozenUser = await freeze(savedUser.id, false)
   const { headers, data } = frozenUser
   expect(headers.statuscode).toEqual(success)

@@ -1,3 +1,4 @@
+const uuidv4 = require('uuid/v4')
 const { post } = require('./services/axios')
 
 const createUser = async (name, email, password) => {
@@ -50,6 +51,13 @@ const freeze = async (userId, frozen) => {
   const user = await post(url, request, serviceName)
   return user
 }
+const createHardcodedUser = async () => {
+  const name = 'Irelia'
+  const email = `${uuidv4()}@hotmail.com`
+  const password = 'test'
+  const user = await createUser(name, email, password)
+  return user.data[0]
+}
 
 module.exports = {
   createUser,
@@ -58,5 +66,6 @@ module.exports = {
   getAllUsers,
   getUser,
   updateUser,
-  freeze
+  freeze,
+  createHardcodedUser
 }
